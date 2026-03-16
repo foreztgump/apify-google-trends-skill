@@ -1,0 +1,17 @@
+# src/apify_google_trends_skill/constants.py
+"""Apify API configuration constants."""
+
+APIFY_BASE_URL = "https://api.apify.com/v2"
+ACTOR_ID = "apify~google-trends-scraper"
+
+SYNC_TIMEOUT_SECONDS = 300.0
+SYNC_HTTP_TIMEOUT_SECONDS = 330.0
+ASYNC_POLL_WAIT_SECONDS = 60
+ASYNC_MAX_POLL_ATTEMPTS = 10
+ASYNC_HTTP_TIMEOUT_SECONDS = 90.0
+
+APIFY_TOKEN_ENV_VAR = "APIFY_API_TOKEN"
+
+TERMINAL_STATUSES = frozenset({"FAILED", "TIMED-OUT", "ABORTED"})
+TRANSITIONAL_STATUSES = frozenset({"RUNNING", "TIMING-OUT", "ABORTING"})
+SUCCESS_STATUS = "SUCCEEDED"
