@@ -4,6 +4,13 @@ import pytest
 from pydantic import ValidationError
 
 from apify_google_trends_skill.models import TrendsQuery
+from apify_google_trends_skill.models import (
+    RegionInterest,
+    RelatedQuery,
+    RelatedTopic,
+    TimelinePoint,
+    TrendResult,
+)
 
 
 class TestTrendsQuery:
@@ -75,3 +82,68 @@ class TestTrendsQuery:
         query = TrendsQuery(search_terms=["test"])
         with pytest.raises(ValidationError):
             query.search_terms = ["changed"]  # type: ignore[misc]
+
+
+class TestTrendResult:
+    def test_from_actor_output_parses_full_payload(self, sample_actor_output: list[dict]) -> None:
+        raw = sample_actor_output[0]
+        result = TrendResult.from_actor_output(raw)
+        assert result.search_term == "web scraping"
+        assert len(result.interest_over_time) == 2
+        assert result.interest_over_time[0].time == "1673136000"
+        assert result.interest_over_time[0].value == [99]
+        assert result.interest_over_time[0].has_data == [True]
+
+    def test_from_actor_output_parses_related_topics(self, sample_actor_output: list[dict]) -> None:
+        raw = sample_actor_output[0]
+        result = TrendResult.from_actor_output(raw)
+        assert len(result.related_topics_top) == 2
+        assert result.related_topics_top[0].title == "Web scraping"
+        assert result.related_topics_top[0].topic_type == "Topic"
+        assert result.related_topics_top[1].title == "Python"
+        assert result.related_topics_top[1].topic_type == "Programming language"
+        assert len(result.related_topics_rising) == 1
+        assert result.related_topics_rising[0].formatted_value == "+50%"
+
+    def test_from_actor_output_parses_related_queries(self, sample_actor_output: list[dict]) -> None:
+        raw = sample_actor_output[0]
+        result = TrendResult.from_actor_output(raw)
+        assert len(result.related_queries_top) == 1
+        assert result.related_queries_top[0].query == "python scraping"
+        assert len(result.related_queries_rising) == 1
+        assert result.related_queries_rising[0].query == "chatgpt web scraping"
+        assert result.related_queries_rising[0].value == 4250
+
+    def test_from_actor_output_uses_subregion_for_region(self, sample_actor_output: list[dict]) -> None:
+        raw = sample_actor_output[0]
+        result = TrendResult.from_actor_output(raw)
+        assert len(result.interest_by_region) == 1
+        assert result.interest_by_region[0].geo_code == "US-CA"
+        assert result.interest_by_region[0].geo_name == "California"
+
+    def test_from_actor_output_uses_interest_by_for_worldwide(
+        self, sample_actor_output_worldwide: list[dict]
+    ) -> None:
+        raw = sample_actor_output_worldwide[0]
+        result = TrendResult.from_actor_output(raw)
+        assert len(result.interest_by_region) == 1
+        assert result.interest_by_region[0].geo_code == "TN"
+        assert result.interest_by_region[0].geo_name == "Tunisia"
+
+    def test_from_actor_output_handles_empty_fields(self) -> None:
+        raw = {
+            "searchTerm": "niche topic",
+            "interestOverTime_timelineData": [],
+            "interestBySubregion": [],
+            "interestByCity": [],
+            "interestBy": [],
+            "relatedTopics_top": [],
+            "relatedTopics_rising": [],
+            "relatedQueries_top": [],
+            "relatedQueries_rising": [],
+        }
+        result = TrendResult.from_actor_output(raw)
+        assert result.search_term == "niche topic"
+        assert result.interest_over_time == []
+        assert result.interest_by_region == []
+        assert result.related_topics_top == []
