@@ -3,13 +3,9 @@
 import pytest
 from pydantic import ValidationError
 
-from apify_google_trends_skill.models import TrendsQuery
 from apify_google_trends_skill.models import (
-    RegionInterest,
-    RelatedQuery,
-    RelatedTopic,
-    TimelinePoint,
     TrendResult,
+    TrendsQuery,
 )
 
 

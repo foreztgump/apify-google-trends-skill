@@ -15,7 +15,7 @@ def sample_actor_output() -> list[dict[str, Any]]:
             "interestOverTime_timelineData": [
                 {
                     "time": "1673136000",
-                    "formattedTime": "Jan 8 – 14, 2023",
+                    "formattedTime": "Jan 8 - 14, 2023",
                     "formattedAxisTime": "Jan 8, 2023",
                     "value": [99],
                     "hasData": [True],
@@ -23,7 +23,7 @@ def sample_actor_output() -> list[dict[str, Any]]:
                 },
                 {
                     "time": "1673740800",
-                    "formattedTime": "Jan 15 – 21, 2023",
+                    "formattedTime": "Jan 15 - 21, 2023",
                     "formattedAxisTime": "Jan 15, 2023",
                     "value": [96],
                     "hasData": [True],

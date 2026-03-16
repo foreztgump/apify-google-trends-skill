@@ -11,8 +11,8 @@ from apify_google_trends_skill.exceptions import (
 from apify_google_trends_skill.models import TrendResult, TrendsQuery
 
 __all__ = [
-    "ApifyActorError",
     "ApifyAPIError",
+    "ApifyActorError",
     "ApifyAuthError",
     "ApifyError",
     "ApifyTimeoutError",

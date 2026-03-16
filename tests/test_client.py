@@ -58,11 +58,11 @@ class TestClientTimeoutFallback:
             return_value=httpx.Response(201, json={"data": {"id": run_id, "status": "RUNNING"}})
         )
         respx_mock.get(_run_url(run_id)).mock(
-            return_value=httpx.Response(200, json={"data": {"id": run_id, "status": "SUCCEEDED", "defaultDatasetId": "ds1"}})
+            return_value=httpx.Response(
+                200, json={"data": {"id": run_id, "status": "SUCCEEDED", "defaultDatasetId": "ds1"}}
+            )
         )
-        respx_mock.get(_dataset_url(run_id)).mock(
-            return_value=httpx.Response(200, json=sample_actor_output)
-        )
+        respx_mock.get(_dataset_url(run_id)).mock(return_value=httpx.Response(200, json=sample_actor_output))
 
         async with ApifyTrendsClient() as client:
             results = await client.query(query)
@@ -81,11 +81,11 @@ class TestClientTimeoutFallback:
             return_value=httpx.Response(201, json={"data": {"id": "should_not_call", "status": "RUNNING"}})
         )
         respx_mock.get(_run_url(run_id)).mock(
-            return_value=httpx.Response(200, json={"data": {"id": run_id, "status": "SUCCEEDED", "defaultDatasetId": "ds1"}})
+            return_value=httpx.Response(
+                200, json={"data": {"id": run_id, "status": "SUCCEEDED", "defaultDatasetId": "ds1"}}
+            )
         )
-        respx_mock.get(_dataset_url(run_id)).mock(
-            return_value=httpx.Response(200, json=sample_actor_output)
-        )
+        respx_mock.get(_dataset_url(run_id)).mock(return_value=httpx.Response(200, json=sample_actor_output))
 
         async with ApifyTrendsClient() as client:
             results = await client.query(query)
@@ -102,11 +102,11 @@ class TestClientTimeoutFallback:
             return_value=httpx.Response(201, json={"data": {"id": run_id, "status": "RUNNING"}})
         )
         respx_mock.get(_run_url(run_id)).mock(
-            return_value=httpx.Response(200, json={"data": {"id": run_id, "status": "SUCCEEDED", "defaultDatasetId": "ds1"}})
+            return_value=httpx.Response(
+                200, json={"data": {"id": run_id, "status": "SUCCEEDED", "defaultDatasetId": "ds1"}}
+            )
         )
-        respx_mock.get(_dataset_url(run_id)).mock(
-            return_value=httpx.Response(200, json=sample_actor_output)
-        )
+        respx_mock.get(_dataset_url(run_id)).mock(return_value=httpx.Response(200, json=sample_actor_output))
 
         async with ApifyTrendsClient() as client:
             results = await client.query(query)
@@ -130,9 +130,7 @@ class TestClientErrors:
                 await client.query(query)
             assert exc_info.value.status_code == 500
 
-    async def test_actor_failure_raises_actor_error(
-        self, query: TrendsQuery, respx_mock: respx.MockRouter
-    ) -> None:
+    async def test_actor_failure_raises_actor_error(self, query: TrendsQuery, respx_mock: respx.MockRouter) -> None:
         run_id = "run_failed"
         respx_mock.post(SYNC_URL).mock(return_value=httpx.Response(408))
         respx_mock.post(RUNS_URL).mock(
@@ -167,9 +165,7 @@ class TestClientErrors:
                 await client.query(query)
             assert exc_info.value.run_status == "TIMED-OUT"
 
-    async def test_poll_exhaustion_raises_timeout_error(
-        self, query: TrendsQuery, respx_mock: respx.MockRouter
-    ) -> None:
+    async def test_poll_exhaustion_raises_timeout_error(self, query: TrendsQuery, respx_mock: respx.MockRouter) -> None:
         run_id = "run_exhausted"
         respx_mock.post(SYNC_URL).mock(return_value=httpx.Response(408))
         respx_mock.post(RUNS_URL).mock(
