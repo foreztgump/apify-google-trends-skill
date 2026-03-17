@@ -165,6 +165,24 @@ class TestClientErrors:
                 await client.query(query)
             assert exc_info.value.run_status == "TIMED-OUT"
 
+    async def test_unexpected_status_raises_api_error(
+        self, query: TrendsQuery, respx_mock: respx.MockRouter
+    ) -> None:
+        run_id = "run_unknown_status"
+        respx_mock.post(SYNC_URL).mock(return_value=httpx.Response(408))
+        respx_mock.post(RUNS_URL).mock(
+            return_value=httpx.Response(201, json={"data": {"id": run_id, "status": "RUNNING"}})
+        )
+        respx_mock.get(_run_url(run_id)).mock(
+            return_value=httpx.Response(
+                200, json={"data": {"id": run_id, "status": "TOTALLY_NEW_STATUS"}}
+            )
+        )
+
+        async with ApifyTrendsClient() as client:
+            with pytest.raises(ApifyAPIError, match="unexpected status"):
+                await client.query(query)
+
     async def test_poll_exhaustion_raises_timeout_error(self, query: TrendsQuery, respx_mock: respx.MockRouter) -> None:
         run_id = "run_exhausted"
         respx_mock.post(SYNC_URL).mock(return_value=httpx.Response(408))

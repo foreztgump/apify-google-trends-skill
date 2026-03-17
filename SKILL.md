@@ -11,7 +11,7 @@ Query Google Trends data for any search term using the Apify Google Trends Scrap
 ## Setup (first time only)
 
 ```bash
-cd ${CLAUDE_SKILL_DIR} && uv sync
+(cd ${CLAUDE_SKILL_DIR} && uv sync)
 ```
 
 Requires `APIFY_API_TOKEN` environment variable set with a valid [Apify API token](https://console.apify.com/account/integrations).
@@ -20,7 +20,7 @@ Requires `APIFY_API_TOKEN` environment variable set with a valid [Apify API toke
 
 ```bash
 echo '{"search_terms": ["AI", "machine learning"], "time_range": "today 3-m", "geo": "US"}' | \
-  cd ${CLAUDE_SKILL_DIR} && uv run python scripts/query_trends.py
+  (cd ${CLAUDE_SKILL_DIR} && uv run python scripts/query_trends.py)
 ```
 
 ### Input (JSON on stdin)
