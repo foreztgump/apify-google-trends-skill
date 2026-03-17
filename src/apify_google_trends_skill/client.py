@@ -14,10 +14,13 @@ from apify_google_trends_skill.constants import (
     ASYNC_HTTP_TIMEOUT_SECONDS,
     ASYNC_MAX_POLL_ATTEMPTS,
     ASYNC_POLL_WAIT_SECONDS,
+    AUTH_ERROR_STATUSES,
+    REQUEST_TIMEOUT_STATUS,
     SUCCESS_STATUS,
     SYNC_HTTP_TIMEOUT_SECONDS,
     SYNC_TIMEOUT_SECONDS,
     TERMINAL_STATUSES,
+    TRANSITIONAL_STATUSES,
 )
 from apify_google_trends_skill.exceptions import (
     ApifyActorError,
@@ -26,9 +29,6 @@ from apify_google_trends_skill.exceptions import (
     ApifyTimeoutError,
 )
 from apify_google_trends_skill.models import TrendResult, TrendsQuery
-
-AUTH_ERROR_STATUSES = frozenset({401, 403})
-REQUEST_TIMEOUT_STATUS = 408
 
 
 class ApifyTrendsClient:
@@ -68,8 +68,10 @@ class ApifyTrendsClient:
         if isinstance(sync_result, list):
             return sync_result
 
-        run_id = sync_result if isinstance(sync_result, str) else await self._start_async_run(actor_input)
-        return await self._poll_and_fetch(run_id)
+        if isinstance(sync_result, str):
+            return await self._poll_and_fetch(sync_result)
+
+        return await self._poll_and_fetch(await self._start_async_run(actor_input))
 
     async def _try_sync_run(self, actor_input: dict[str, Any]) -> list[dict[str, Any]] | str | None:
         """Attempt sync run. Returns dataset items, run_id, or None."""
@@ -84,21 +86,14 @@ class ApifyTrendsClient:
         except httpx.TimeoutException:
             return None
 
-        if response.status_code in AUTH_ERROR_STATUSES:
-            raise ApifyAuthError(
-                f"Authentication failed: {response.status_code}", status_code=response.status_code
-            )
-
         if response.status_code == REQUEST_TIMEOUT_STATUS:
             return None
 
-        if response.status_code >= 400:
-            raise ApifyAPIError(
-                f"API error: {response.status_code}",
-                status_code=response.status_code,
-                response_body=response.text,
-            )
+        self._check_response_errors(response)
+        return self._parse_sync_response(response)
 
+    def _parse_sync_response(self, response: httpx.Response) -> list[dict[str, Any]] | str:
+        """Parse sync response: dataset items (list) or run object (run ID string)."""
         body = response.json()
 
         if isinstance(body, list):
@@ -137,6 +132,13 @@ class ApifyTrendsClient:
                     run_id=run_id,
                 )
 
+            if status not in TRANSITIONAL_STATUSES:
+                raise ApifyAPIError(
+                    f"Actor run {run_id} has unexpected status: {status}",
+                    status_code=0,
+                    response_body="",
+                )
+
         raise ApifyTimeoutError(
             f"Actor run {run_id} did not complete after {ASYNC_MAX_POLL_ATTEMPTS} polls"
         )
@@ -156,13 +158,14 @@ class ApifyTrendsClient:
         url = f"{APIFY_BASE_URL}/actor-runs/{run_id}/dataset/items"
         response = await self._http_client.get(url)
         self._check_response_errors(response)
-        return response.json()
+        return cast("list[dict[str, Any]]", response.json())
 
     def _check_response_errors(self, response: httpx.Response) -> None:
         """Raise appropriate exceptions for error status codes."""
         if response.status_code in AUTH_ERROR_STATUSES:
             raise ApifyAuthError(
-                f"Authentication failed: {response.status_code}", status_code=response.status_code
+                f"Authentication failed: {response.status_code}",
+                status_code=response.status_code,
             )
         if response.status_code >= 400:
             raise ApifyAPIError(
