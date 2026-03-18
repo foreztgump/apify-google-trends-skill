@@ -13,3 +13,13 @@ build/
 .pytest_cache/
 .mypy_cache/
 *.log
+
+# Internal development docs
+CLAUDE.md
+CODE_PRINCIPLES.md
+.coderabbit.yaml
+reference.md
+openspec/
+docs/superpowers/
+.claude/commands/opsx/
+.claude/skills/openspec-*/
